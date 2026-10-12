@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ömer Üstündağ — mustundag.cc</title>
+<style>
+  :root { --bg: #0B1220; --card: #16213A; --accent: #2563EB; --txt: #E8EDF3; --mut: #94A3B8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--txt); font-family: "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 56px 20px 64px; }
+  header { text-align: center; animation: in .6s ease-out; }
+  header h1 { font-size: 46px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--mut); margin-top: 10px; font-size: 17px; }
+  .links { display: flex; gap: 12px; justify-content: center; margin-top: 18px; }
+  .links a { color: var(--txt); text-decoration: none; background: var(--card);
+             border: 1px solid #2A3B5C; padding: 9px 20px; border-radius: 999px; font-size: 14px;
+             transition: transform .12s, border-color .12s; }
+  .links a:hover { transform: translateY(-2px); border-color: var(--accent); }
+  h2 { margin: 40px 0 4px; font-size: 22px; }
+  .sub { color: var(--mut); font-size: 14px; margin-bottom: 14px; }
+  .stage { position: relative; min-height: 190px; }
+  .proj { display: none; background: var(--card); border: 1px solid #22345A;
+          border-radius: 14px; padding: 22px; animation: in .45s ease-out; }
+  .proj.show { display: block; }
+  .proj.feat { border-color: var(--accent); }
+  .proj h3 { font-size: 19px; }
+  .proj h3 a { color: var(--txt); text-decoration: none; }
+  .proj h3 a:hover { color: var(--accent); }
+  .proj p { color: var(--mut); font-size: 14px; margin: 8px 0 12px; line-height: 1.55; min-height: 44px; }
+  .meta { font-size: 12px; color: var(--mut); display: flex; gap: 14px; }
+  .dots { display: flex; gap: 8px; justify-content: center; margin-top: 14px; align-items: center; }
+  .dots button { background: none; border: none; color: var(--mut); font-size: 18px; cursor: pointer; padding: 4px 10px; }
+  .dots button:hover { color: var(--txt); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #2A3B5C; display: inline-block; cursor: pointer; }
+  .dot.on { background: var(--accent); }
+  .tag { display: inline-block; font-size: 11px; background: var(--accent); color: #fff;
+         border-radius: 6px; padding: 2px 8px; margin-left: 8px; vertical-align: middle; }
+  footer { margin-top: 52px; color: var(--mut); font-size: 13px; text-align: center; }
+  footer a { color: var(--accent); }
+  @keyframes in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ömer <span>Üstündağ</span></h1>
+    <p>Ağ ve yazılım işleri — sansürü delen VPN'in yapımcısı.</p>
+    <div class="links">
+      <a href="https://github.com/omerustundag58">GitHub</a>
+      <a href="https://vpn.mustundag.cc">DPI VPN</a>
+    </div>
+  </header>
+
+  <h2>Projeler</h2>
+  <p class="sub">GitHub'dan canlı çekilir, kendiliğinden döner.</p>
+  <div class="stage" id="stage"></div>
+  <div class="dots" id="dots"></div>
+
+  <footer>mustundag.cc — GPL ruhuyla açık kaynak</footer>
+</div>
+<script>
+const USER = "omerustundag58";
+const FEATURED = {
+  name: "dpi-vpn", url: "https://vpn.mustundag.cc",
+  desc: "DPI engelini record-split ile aşan özgür VPN (Windows + Android).",
+  lang: "Rust + Kotlin", stars: "★ öne çıkan", feat: true
+};
+let cards = [], idx = 0, timer = null;
+
+function card(r) {
+  const d = document.createElement("div");
+  d.className = "proj" + (r.feat ? " feat" : "");
+  d.innerHTML =
+    "<h3><a href='" + r.url + "'>" + r.name + "</a>" +
+    (r.feat ? "<span class='tag'>öne çıkan</span>" : "") + "</h3>" +
+    "<p>" + (r.desc || "Açıklama yok.") + "</p>" +
+    "<div class='meta'><span>" + (r.lang || "") + "</span><span>" + (r.stars || "") + "</span></div>";
+  return d;
+}
+function show(i) {
+  idx = (i + cards.length) % cards.length;
+  document.querySelectorAll(".proj").forEach((el, k) =>
+    el.classList.toggle("show", k === idx));
+  document.querySelectorAll(".dot").forEach((el, k) =>
+    el.classList.toggle("on", k === idx));
+}
+function restart() { clearInterval(timer); timer = setInterval(() => show(idx + 1), 5000); }
+
+async function init() {
+  const stage = document.getElementById("stage");
+  const dots = document.getElementById("dots");
+  let repos = [];
+  try {
+    const r = await fetch("https://api.github.com/users/" + USER + "/repos?sort=updated&per_page=6");
+    const j = await r.json();
+    repos = j.filter(x => x.name !== "mustundag.cc").map(x => ({
+      name: x.name, url: x.html_url, desc: x.description,
+      lang: x.language, stars: x.stargazers_count ? "★ " + x.stargazers_count : ""
+    }));
+  } catch (e) { /* çevrimdışıysa sadece öne çıkan */ }
+  cards = [FEATURED].concat(repos).slice(0, 7);
+  cards.forEach(() => {
+    stage.appendChild(card(cards[stage.children.length]));
+  });
+  const prev = document.createElement("button"); prev.textContent = "‹";
+  prev.onclick = () => { show(idx - 1); restart(); };
+  const next = document.createElement("button"); next.textContent = "›";
+  next.onclick = () => { show(idx + 1); restart(); };
+  dots.appendChild(prev);
+  cards.forEach((_, k) => {
+    const s = document.createElement("span");
+    s.className = "dot" + (k === 0 ? " on" : "");
+    s.onclick = () => { show(k); restart(); };
+    dots.appendChild(s);
+  });
+  dots.appendChild(next);
+  show(0); restart();
+}
+init();
+</script>
+</body>
+</html>
