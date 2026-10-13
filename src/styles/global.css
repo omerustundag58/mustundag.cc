@@ -37,6 +37,9 @@
     Consolas, "DejaVu Sans Mono", "Courier New", monospace;
 
   --maxw: 940px;
+
+  /* yan boşluk — dar ekranda (safe-area ile) otomatik ayarlanır */
+  --gutter: 20px;
 }
 
 /* ---- reset ---- */
@@ -62,8 +65,11 @@ body {
   font-size: 15.5px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%; /* iOS rastgele metin büyütmesini engeller */
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word; /* uzun linkler taşmaz */
   min-height: 100vh;
+  min-height: 100dvh; /* mobil adres çubuğu için */
 }
 
 img {
@@ -76,6 +82,8 @@ a {
   text-decoration: none;
   text-underline-offset: 3px;
   transition: color 0.12s, text-shadow 0.12s;
+  touch-action: manipulation; /* mobilde 300ms dokunma gecikmesini kaldırır */
+  -webkit-tap-highlight-color: rgba(var(--blue-rgb), 0.28);
 }
 
 a:hover,
@@ -173,7 +181,7 @@ a:focus-visible {
 .nav__inner {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 12px var(--gutter);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -204,9 +212,12 @@ a:focus-visible {
 
 .nav__links a {
   color: var(--dim);
-  padding: 4px 10px;
+  padding: 7px 11px;
   border: 1px solid transparent;
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
 }
 
 .nav__links a:hover {
@@ -225,7 +236,15 @@ a:focus-visible {
 .wrap {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 34px 20px 72px;
+  padding: 34px var(--gutter) 72px;
+}
+
+/* iPhone çentiği / dinamik ada: yatay boşlukları güvenli alanda tut */
+.wrap,
+.nav__inner,
+.footer__inner {
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
 }
 
 /* ---- terminal penceresi ---- */
@@ -390,7 +409,10 @@ a:focus-visible {
 }
 
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px; /* dokunma hedefi */
   border: 1px solid rgba(var(--blue-rgb), 0.6);
   color: var(--blue);
   background: rgba(var(--blue-rgb), 0.1);
@@ -791,7 +813,7 @@ a.post-nav__item:hover {
 .footer__inner {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 22px 20px 34px;
+  padding: 22px var(--gutter) 34px;
   display: flex;
   justify-content: space-between;
   gap: 14px;
@@ -842,26 +864,129 @@ a.post-nav__item:hover {
 }
 
 /* ---- responsive ---- */
+/* ---- tablet / orta ekran ---- */
+@media (max-width: 900px) {
+  .term__body {
+    padding: 18px 16px 20px;
+  }
+  .section-title {
+    margin-top: 28px;
+  }
+}
+
+/* ---- telefon ---- */
 @media (max-width: 640px) {
+  :root {
+    --gutter: 14px;
+  }
+
   body {
     font-size: 15px;
+    line-height: 1.6;
   }
-  .term__body {
-    padding: 16px 14px 18px;
-  }
+
   .nav__inner {
-    padding: 10px 14px;
-    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 8px;
   }
+
+  /* menü tek satıra iner, parmakla yatay kaydırılır (scrollbar gizli) */
   .nav__links {
     margin-left: 0;
     width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    border-top: 1px solid var(--line);
+    padding-top: 6px;
   }
+
+  .nav__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav__links a {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+
   .wrap {
-    padding: 24px 14px 56px;
+    padding-top: 24px;
+    padding-bottom: 56px;
   }
+
+  .term__body {
+    padding: 16px 14px 18px;
+  }
+
+  .term__title {
+    font-size: 12px;
+    padding-right: 36px;
+  }
+
+  .hero__name {
+    font-size: clamp(28px, 9vw, 40px);
+  }
+
+  .btn {
+    min-height: 46px;
+    padding: 10px 16px;
+    font-size: 14.5px;
+  }
+
+  .proj,
+  .post {
+    padding: 13px 14px;
+  }
+
+  .prose {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .prose pre {
+    font-size: 13px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* geniş tablolar taşmasın, yatay kaydırılsın */
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* yazı gezinmesi alt alta */
+  .post-nav {
+    flex-direction: column;
+  }
+
   .post-nav__item {
     max-width: 100%;
+  }
+
+  .post-nav__item--right {
+    text-align: left;
+    margin-left: 0;
+  }
+
+  /* footer tek sütun */
+  .footer__inner {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* ---- dokunmatikte yapışan hover efekti olmasın ---- */
+@media (hover: none) {
+  .proj:hover,
+  .post:hover,
+  .btn:hover {
+    transform: none;
   }
 }
 
