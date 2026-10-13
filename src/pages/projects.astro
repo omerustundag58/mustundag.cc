@@ -23,10 +23,10 @@ const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivl
       {projects.map((p) => <ProjectCard project={p} />)}
     </div>
 
-    <p class="notice" style="margin-top: 22px">
-      Listede olmayan şeyler de var: masaüstümde duran deneyler, yarım kalan
-      depolar ve bir gün çıkar dediğim araçlar. Kodun tamamı{' '}
-      <a href="https://github.com/omerustundag58">GitHub</a>'da.
+    <p class="notice notice--reveal" style="margin-top: 22px">
+      <span class="dim">#</span> bu liste yalnızca github'a bağlı olanlar. masaüstümde uyuyan
+      deneyler, yarım kalan fikirler ve <em>"bir gün çıkar"</em> dediğim araçlar da var —
+      hepsinin kaynağı <a href="https://github.com/omerustundag58">github</a>'da.
     </p>
   </Terminal>
 
@@ -35,3 +35,55 @@ const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivl
     <a class="btn btn--ghost" href="/blog">blog →</a>
   </div>
 </Base>
+
+<script>
+  /* not: kelime kelime hafifçe belirir (görünür olunca tetiklenir) */
+  const note = document.querySelector<HTMLElement>('.notice--reveal');
+
+  if (note) {
+    const wrapWords = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const frag = document.createDocumentFragment();
+        for (const part of (node.textContent || '').split(/(\s+)/)) {
+          if (!part) continue;
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part));
+          } else {
+            const span = document.createElement('span');
+            span.className = 'nw';
+            span.textContent = part;
+            frag.appendChild(span);
+          }
+        }
+        node.parentNode?.replaceChild(frag, node);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        for (const child of Array.from(node.childNodes)) wrapWords(child);
+      }
+    };
+
+    for (const child of Array.from(note.childNodes)) wrapWords(child);
+    note.setAttribute('data-split', '');
+
+    const words = note.querySelectorAll<HTMLElement>('.nw');
+    words.forEach((w, i) => {
+      w.style.transitionDelay = `${Math.min(i * 28, 850)}ms`;
+    });
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      note.classList.add('is-in');
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              note.classList.add('is-in');
+              io.disconnect();
+            }
+          }
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(note);
+    }
+  }
+</script>

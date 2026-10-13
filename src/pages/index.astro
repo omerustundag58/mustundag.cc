@@ -44,7 +44,6 @@ const description =
   </Terminal>
 
   <!-- ===== projeler ===== -->
-  <p class="section-title">$ ls ~/projects</p>
   <Terminal title="~/projects — ls -la">
     <div class="projects">
       {projects.map((p) => <ProjectCard project={p} />)}
@@ -55,7 +54,6 @@ const description =
   </Terminal>
 
   <!-- ===== blog ===== -->
-  <p class="section-title">$ ls -lt ~/blog | head</p>
   <Terminal title="~/blog — less">
     {
       posts.length > 0 ? (
@@ -74,7 +72,6 @@ const description =
   </Terminal>
 
   <!-- ===== iletişim ===== -->
-  <p class="section-title">$ ./contact</p>
   <Terminal title="contact — ./run">
     <p class="out" style="margin-bottom: 0">
       <span class="dim">#</span> en hızlı yol e-posta:{' '}

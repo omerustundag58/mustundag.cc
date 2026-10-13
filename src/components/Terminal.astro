@@ -11,7 +11,7 @@ const { title = 'zsh — 80×24', variant = 'default' } = Astro.props;
 ---
 
 <section class={`term term--${variant}`}>
-  <div class="term__bar">
+  <div class="term__bar" title="başka pencerenin üstüne sürükle → yer değiştirir · çift tıkla sırayı sıfırlar">
     <span class="term__dots" aria-hidden="true">
       <i class="term__dot term__dot--r"></i>
       <i class="term__dot term__dot--y"></i>
@@ -23,3 +23,93 @@ const { title = 'zsh — 80×24', variant = 'default' } = Astro.props;
     <slot />
   </div>
 </section>
+
+<script>
+  /* pencere yöneticisi (yer değiştirme):
+     başlık çubuğundan tutup başka bir pencerenin üstüne bırak → ikisi yer değiştirir.
+     konum serbestçe kaydırılmaz, sıra değişir; sayfa yenilenince DOM başlangıç
+     sırasına döner (hiçbir şey kalıcı olarak saklanmaz).
+     çift tık: sırayı anında sıfırlar.
+     dokunmatik parmakta devre dışı — sayfa kaydırması bozulmasın. */
+  const terms = Array.from(document.querySelectorAll<HTMLElement>('.term'));
+  const defaultOrder = new Map<HTMLElement, number>();
+  terms.forEach((t, i) => defaultOrder.set(t, i));
+
+  terms.forEach((term) => {
+    const bar = term.querySelector<HTMLElement>('.term__bar');
+    if (!bar) return;
+
+    let dragging = false;
+    let target: HTMLElement | null = null;
+
+    const clearTarget = () => {
+      target?.classList.remove('is-target');
+      target = null;
+    };
+
+    /* imlecin altındaki pencereyi bul (sürüklenecek olan hariç) */
+    const windowAt = (x: number, y: number): HTMLElement | null => {
+      for (const el of document.elementsFromPoint(x, y)) {
+        const win = el.closest<HTMLElement>('.term');
+        if (win && win !== term) return win;
+      }
+      return null;
+    };
+
+    bar.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.button !== 0) return;
+      dragging = true;
+      term.classList.add('is-dragging');
+      bar.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    bar.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const next = windowAt(e.clientX, e.clientY);
+      if (next === target) return;
+      target?.classList.remove('is-target');
+      target = next;
+      target?.classList.add('is-target');
+    });
+
+    /* iki pencerenin yerini değiştir */
+    const swap = (a: HTMLElement, b: HTMLElement) => {
+      const parent = a.parentNode;
+      if (!parent) return;
+      const aNext = a.nextSibling;
+      const bNext = b.nextSibling;
+      if (aNext === b) {
+        parent.insertBefore(b, a);
+      } else if (bNext === a) {
+        parent.insertBefore(a, b);
+      } else {
+        parent.insertBefore(a, bNext);
+        parent.insertBefore(b, aNext);
+      }
+    };
+
+    const stop = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      term.classList.remove('is-dragging');
+      if (bar.hasPointerCapture(e.pointerId)) bar.releasePointerCapture(e.pointerId);
+      const t = target;
+      clearTarget();
+      if (t) swap(term, t);
+    };
+
+    bar.addEventListener('pointerup', stop);
+    bar.addEventListener('pointercancel', stop);
+
+    /* çift tık: sırayı ilk haline döndür */
+    bar.addEventListener('dblclick', () => {
+      const parent = term.parentNode;
+      if (!parent) return;
+      const sorted = Array.from(defaultOrder.keys()).sort(
+        (a, b) => (defaultOrder.get(a) ?? 0) - (defaultOrder.get(b) ?? 0)
+      );
+      sorted.forEach((el) => parent.appendChild(el));
+    });
+  });
+</script>
