@@ -1,0 +1,87 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Terminal from '../../components/Terminal.astro';
+import { formatDate, isoDate } from '../../utils/date';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog')).filter((p) => !p.data.draft);
+  posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      newer: posts[i - 1] ?? null, // dizide daha eski olduğu için "önceki"
+      older: posts[i + 1] ?? null, // dizide daha yeni olduğu için "sonraki"
+    },
+  }));
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+---
+
+<Base title={d.title} description={d.description}>
+  <a class="back" href="/blog">← cd ~/blog</a>
+
+  <Terminal title={`~/blog/${post.id}.md — less`}>
+    <header class="article-head">
+      <span class="dim">-rw-r--r--&nbsp; 1 omer omer&nbsp; {post.id}.md</span>
+      <h1>{d.title}</h1>
+      <p class="meta">
+        <time datetime={isoDate(d.pubDate)}>{formatDate(d.pubDate)}</time>
+        {
+          d.updatedDate && (
+            <>
+              {' · güncellendi '}
+              <time datetime={isoDate(d.updatedDate)}>{formatDate(d.updatedDate)}</time>
+            </>
+          )
+        }
+        {
+          d.tags.length > 0 && (
+            <span class="tags">
+              {d.tags.map((t) => (
+                <span class="tag">{t}</span>
+              ))}
+            </span>
+          )
+        }
+      </p>
+    </header>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    <nav class="post-nav" aria-label="Yazı gezinmesi">
+      {
+        older ? (
+          <a class="post-nav__item" href={`/blog/${older.id}`}>
+            <span class="dim">← önceki</span>
+            <span>{older.data.title}</span>
+          </a>
+        ) : (
+          <span class="post-nav__item dim">← önceki yok</span>
+        )
+      }
+      {
+        newer ? (
+          <a class="post-nav__item post-nav__item--right" href={`/blog/${newer.id}`}>
+            <span class="dim">sonraki →</span>
+            <span>{newer.data.title}</span>
+          </a>
+        ) : (
+          <span class="post-nav__item post-nav__item--right dim">sonraki yok →</span>
+        )
+      }
+    </nav>
+  </Terminal>
+
+  <div class="btn-row">
+    <a class="btn btn--ghost" href="/blog">← tüm yazılar</a>
+    <a class="btn btn--ghost" href="/rss.xml">rss</a>
+  </div>
+</Base>

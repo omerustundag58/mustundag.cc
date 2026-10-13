@@ -1,0 +1,16 @@
+{
+  "name": "mustundag-cc",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "mustundag.cc — Ömer Üstündağ kişisel sitesi",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "astro": "^7.3.8"
+  }
+}

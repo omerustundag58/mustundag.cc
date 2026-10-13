@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import Terminal from '../../components/Terminal.astro';
+import Prompt from '../../components/Prompt.astro';
+import PostItem from '../../components/PostItem.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const desc = 'Ağ, güvenlik ve yazılım üzerine notlar. RSS ile de takip edebilirsin.';
+---
+
+<Base title="blog" description={desc}>
+  <Terminal title="omer@mustundag: ~/blog — ls -lt">
+    <Prompt cmd="ls -lt ~/blog/*.md" delay={0.1}>
+      <p class="out" style="margin-bottom: 0">
+        <span class="dim">{posts.length} yazı · rss: <a href="/rss.xml">/rss.xml</a></span>
+      </p>
+    </Prompt>
+
+    {
+      posts.length > 0 ? (
+        <ul class="posts">
+          {posts.map((p) => (
+            <PostItem post={p} />
+          ))}
+        </ul>
+      ) : (
+        <p class="notice">henüz yazı yok — ama plan var.</p>
+      )
+    }
+  </Terminal>
+
+  <div class="btn-row">
+    <a class="btn btn--ghost" href="/">← whoami</a>
+    <a class="btn btn--ghost" href="/projects">projeler →</a>
+  </div>
+</Base>

@@ -1,0 +1,42 @@
+---
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+}
+
+const { project: p } = Astro.props;
+const tag = p.featured ? 'öne çıkan' : p.status;
+---
+
+<article class:list={['proj', p.featured && 'proj--feat']}>
+  <div class="proj__head">
+    <span class="proj__name">{p.name}</span>
+    {p.featured && <span class="badge">öne çıkan</span>}
+    {!p.featured && p.status && <span class:list={['badge', 'badge--amber']}>{p.status}</span>}
+  </div>
+
+  <p class="proj__desc">{p.desc}</p>
+
+  <div class="proj__meta">
+    {p.lang && <span class="lang">{p.lang}</span>}
+    {typeof p.stars === 'number' && p.stars > 0 && <span class="stars">{p.stars}</span>}
+    {p.pushedAt && (
+      <span class="updated">son commit: {new Date(p.pushedAt).toISOString().slice(0, 10)}</span>
+    )}
+    <span class="links">
+      {p.site && <a href={p.site}>site ↗</a>}
+      {p.url && <a href={p.url}>kod ↗</a>}
+    </span>
+  </div>
+
+  {
+    p.tags && p.tags.length > 0 && (
+      <div class="tags">
+        {p.tags.map((t) => (
+          <span class="tag">{t}</span>
+        ))}
+      </div>
+    )
+  }
+</article>

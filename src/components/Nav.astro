@@ -1,0 +1,27 @@
+---
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const links = [
+  { href: '/', label: 'whoami' },
+  { href: '/projects', label: 'projects' },
+  { href: '/blog', label: 'blog' },
+  { href: '/rss.xml', label: 'rss' },
+];
+
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+---
+
+<header class="nav">
+  <div class="nav__inner">
+    <a class="nav__brand" href="/">mustundag.cc<span class="cursor-blink" aria-hidden="true">▌</span></a>
+    <nav class="nav__links" aria-label="Ana menü">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>

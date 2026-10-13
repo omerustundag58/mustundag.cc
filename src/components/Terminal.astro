@@ -1,0 +1,25 @@
+---
+/**
+ * Terminal penceresi: başlık çubuğu + gövde. İçerik slot'tan gelir.
+ */
+interface Props {
+  title?: string;
+  variant?: 'default' | 'feat';
+}
+
+const { title = 'zsh — 80×24', variant = 'default' } = Astro.props;
+---
+
+<section class={`term term--${variant}`}>
+  <div class="term__bar">
+    <span class="term__dots" aria-hidden="true">
+      <i class="term__dot term__dot--r"></i>
+      <i class="term__dot term__dot--y"></i>
+      <i class="term__dot term__dot--g"></i>
+    </span>
+    <span class="term__title">{title}</span>
+  </div>
+  <div class="term__body">
+    <slot />
+  </div>
+</section>

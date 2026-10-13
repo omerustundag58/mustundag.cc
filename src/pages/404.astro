@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import Terminal from '../components/Terminal.astro';
+import Prompt from '../components/Prompt.astro';
+---
+
+<Base title="404" description="Sayfa bulunamadı — komut da bulunamadı.">
+  <Terminal title="omer@mustundag: ? — bash">
+    <Prompt cmd="./yok-boyle-bir-sey" delay={0.15}>
+      <p class="out">bash: ./yok-boyle-bir-sey: No such file or directory</p>
+    </Prompt>
+
+    <Prompt cmd="echo $?" delay={1.2}>
+      <p class="out">127</p>
+    </Prompt>
+
+    <Prompt cmd="ls /" delay={1.9}>
+      <p class="out">
+        <a href="/">~</a>&nbsp;&nbsp;<a href="/projects">projects</a>&nbsp;&nbsp;<a href="/blog">blog</a>&nbsp;&nbsp;<a href="/rss.xml">rss.xml</a>
+      </p>
+    </Prompt>
+
+    <p class="notice">
+      Aradığın sayfa yok (ya da taşındı). Üstteki dizinlerden devam edebilirsin.
+    </p>
+  </Terminal>
+
+  <div class="btn-row">
+    <a class="btn" href="/">→ ana dizine dön</a>
+  </div>
+</Base>

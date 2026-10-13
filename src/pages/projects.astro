@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import Terminal from '../components/Terminal.astro';
+import Prompt from '../components/Prompt.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getProjects } from '../data/projects';
+
+const projects = await getProjects();
+const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivleyiciler ve daha fazlası.';
+---
+
+<Base title="projeler" description={desc}>
+  <Terminal title="omer@mustundag: ~/projects — ls -la">
+    <Prompt cmd="ls -la ~/projects" delay={0.1}>
+      <p class="out" style="margin-bottom: 0">
+        <span class="dim">toplam {projects.length} kayıt · yıldızlar GitHub'dan derleme anında çekilir</span>
+      </p>
+    </Prompt>
+
+    <div class="projects">
+      {projects.map((p) => <ProjectCard project={p} />)}
+    </div>
+
+    <p class="notice" style="margin-top: 22px">
+      Listede olmayan şeyler de var: masaüstümde duran deneyler, yarım kalan
+      depolar ve bir gün çıkar dediğim araçlar. Kodun tamamı
+      <a href="https://github.com/omerustundag58">GitHub</a>'da.
+    </p>
+  </Terminal>
+
+  <div class="btn-row">
+    <a class="btn btn--ghost" href="/">← whoami</a>
+    <a class="btn btn--ghost" href="/blog">blog →</a>
+  </div>
+</Base>

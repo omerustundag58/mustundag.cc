@@ -1,0 +1,30 @@
+---
+/**
+ * Prompt satırı: `omer@mustundag:~$ komut` yazma animasyonuyla belirir,
+ * ardından slot içeriği çıktı olarak gösterilir. JS yok — saf CSS.
+ */
+interface Props {
+  cmd: string;
+  path?: string;
+  host?: string;
+  delay?: number;
+}
+
+const { cmd, path = '~', host = 'mustundag', delay = 0 } = Astro.props;
+const chars = [...cmd];
+const len = chars.length;
+const dur = Math.min(1.6, 0.22 + len * 0.028).toFixed(2);
+const style = `--len:${len}ch;--dur:${dur}s;--delay:${delay}s;animation-timing-function:steps(${len},end)`;
+---
+
+<div class="line">
+  <span class="prompt">omer@<span class="host">{host}</span>:<span class="path">{path}</span><span class="sigil">$</span></span>{' '}
+  <span class="cmd"><span class="tw" style={style}>{cmd}</span></span><span class="cursor-blink" aria-hidden="true">▌</span>
+</div>
+{
+  Astro.slots.has('output') && (
+    <div class="out">
+      <slot />
+    </div>
+  )
+}
