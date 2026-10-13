@@ -9,14 +9,14 @@ const posts = (await getCollection('blog'))
   .filter((p) => !p.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-const desc = 'Ağ, güvenlik ve yazılım üzerine notlar. RSS ile de takip edebilirsin.';
+const desc = 'Ağ, güvenlik ve yazılım üzerine notlar.';
 ---
 
 <Base title="blog" description={desc}>
   <Terminal title="omer@mustundag: ~/blog — ls -lt">
     <Prompt cmd="ls -lt ~/blog/*.md" delay={0.1}>
       <p class="out" style="margin-bottom: 0">
-        <span class="dim">{posts.length} yazı · rss: <a href="/rss.xml">/rss.xml</a></span>
+        <span class="dim">{posts.length} yazı</span>
       </p>
     </Prompt>
 

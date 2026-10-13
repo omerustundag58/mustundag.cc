@@ -1,89 +1,70 @@
 /**
- * Proje listesi.
- * Kaynak: elle bakımı yapılan "curated" liste + derleme anında GitHub API'den
- * yıldız/son güncelleme bilgisi (varsa). Ağ yoksa liste sessizce sabit veriye döner.
+ * Proje listesi — doğrudan GitHub API'inden canlı çekilir.
+ * Derleme anında (GitHub Actions) çalıştığı için liste her yayında tazelenir:
+ * yıldız, açıklama, dil, konu etiketleri ve son commit tarihi GitHub'dan gelir.
+ * Ağ başarısız olursa sessizce sabit yedeğe döner (site asla boş kalmaz).
  */
 
 export type Project = {
-  /** GitHub depo adı (istatistik eşleştirmesi için) */
-  repo?: string;
   name: string;
   desc: string;
-  /** Kaynak / repo adresi */
-  url?: string | null;
-  /** Canlı site */
+  /** Depo adresi */
+  url: string;
+  /** Canlı site (varsa) */
   site?: string;
   lang: string;
-  tags?: string[];
-  status?: string;
+  topics: string[];
+  stars: number;
+  /** pushed_at */
+  updatedAt: string;
   featured?: boolean;
-  stars?: number;
-  pushedAt?: string;
+  archived?: boolean;
 };
 
-const curated: Project[] = [
+/** GitHub'da olmayan küçük düzeltmeler (ör. dpi-vpn'in ayrı sitesi). */
+const OVERRIDES: Record<string, Partial<Project>> = {
+  'dpi-vpn': { site: 'https://vpn.mustundag.cc', featured: true },
+};
+
+/** Çevrimdışı / API hatası durumunda kullanılacak asgari liste. */
+const FALLBACK: Project[] = [
   {
-    repo: 'dpi-vpn',
     name: 'dpi-vpn',
-    desc: "DPI engelini record-split ile aşan özgür VPN. Windows ve Android için; kayıt yok, hesap yok, tamamen açık kaynak.",
+    desc: 'DPI engelini record-split ile aşan özgür VPN (Windows + Android).',
     url: 'https://github.com/omerustundag58/dpi-vpn',
     site: 'https://vpn.mustundag.cc',
-    lang: 'Rust · Kotlin',
-    tags: ['VPN', 'DPI', 'TLS', 'Android', 'Windows'],
-    status: 'aktif',
+    lang: 'Rust',
+    topics: ['vpn', 'dpi'],
+    stars: 0,
+    updatedAt: '2026-10-12T00:00:00Z',
     featured: true,
   },
   {
-    repo: 'email-mcp',
     name: 'email-mcp',
-    desc: 'OpenCode için genel amaçlı IMAP/SMTP MCP sunucusu: e-posta oku, ara, gönder, klasörleri yönet.',
+    desc: 'OpenCode için genel amaçlı IMAP/SMTP MCP sunucusu.',
     url: 'https://github.com/omerustundag58/email-mcp',
     lang: 'TypeScript',
-    tags: ['MCP', 'IMAP', 'SMTP', 'AI'],
-    status: 'aktif',
-  },
-  {
-    repo: 'mustundag.cc',
-    name: 'mustundag.cc',
-    desc: 'Bu site. Astro ile üretilir, GitHub Actions ile yayımlanır, Cloudflare arkasında yaşar. CRT terminal teması.',
-    url: 'https://github.com/omerustundag58/mustundag.cc',
-    site: 'https://mustundag.cc',
-    lang: 'Astro · TypeScript',
-    tags: ['Web', 'Astro', 'CI'],
-    status: 'canlı',
-  },
-  {
-    name: 'yt-arsiv',
-    desc: "YouTube arşivleyici: indir, transkript çıkar, AI ile özetle, yerel arşivde ara. Kendi kendine çalışan CLI/TUI.",
-    lang: 'Python',
-    tags: ['Python', 'AI', 'TUI'],
-    status: 'gizli',
-  },
-  {
-    name: 'npu-denoise',
-    desc: 'GT-CRNN tabanlı gerçek zamanlı ses gürültü azaltma — ONNX + NPU, yerel model, mikrofon akışı üzerinde çalışır.',
-    lang: 'Python · ONNX',
-    tags: ['Ses', 'NPU', 'ONNX'],
-    status: 'deney',
-  },
-  {
-    name: 'hardcore-pvp-pack',
-    desc: 'Minecraft 1.21 için Fabric tabanlı, PvP ve performans odaklı mod paketi: 40+ mod, ayar dosyaları ve kurulum betiği.',
-    lang: 'Python · Fabric',
-    tags: ['Minecraft', 'Fabric'],
-    status: 'yayında',
+    topics: ['mcp', 'imap'],
+    stars: 0,
+    updatedAt: '2026-10-11T00:00:00Z',
   },
 ];
 
 type GhRepo = {
-  html_url?: string;
+  name: string;
+  html_url: string;
+  homepage?: string | null;
   description?: string | null;
   language?: string | null;
+  topics?: string[];
   stargazers_count?: number;
   pushed_at?: string;
+  archived?: boolean;
+  fork?: boolean;
+  private?: boolean;
 };
 
-async function fetchGithub(): Promise<Record<string, GhRepo>> {
+async function fetchGithub(): Promise<Project[]> {
   const headers: Record<string, string> = {
     'User-Agent': 'mustundag.cc-build',
     Accept: 'application/vnd.github+json',
@@ -91,40 +72,42 @@ async function fetchGithub(): Promise<Record<string, GhRepo>> {
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 
   const res = await fetch(
-    'https://api.github.com/users/omerustundag58/repos?sort=updated&per_page=30',
+    'https://api.github.com/users/omerustundag58/repos?type=owner&sort=updated&per_page=50',
     { headers },
   );
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-  const data: Array<{ name: string } & GhRepo> = await res.json();
 
-  const map: Record<string, GhRepo> = {};
-  for (const r of data) map[r.name] = r;
-  return map;
+  const data: GhRepo[] = await res.json();
+
+  return data
+    .filter((r) => !r.fork && !r.private)
+    .map((r) => {
+      const base: Project = {
+        name: r.name,
+        desc: r.description?.trim() || 'Açıklama eklenmemiş.',
+        url: r.html_url,
+        site: r.homepage?.trim() || undefined,
+        lang: r.language ?? '',
+        topics: r.topics ?? [],
+        stars: r.stargazers_count ?? 0,
+        updatedAt: r.pushed_at ?? r.name,
+        archived: r.archived,
+      };
+      return { ...base, ...(OVERRIDES[r.name] ?? {}) };
+    })
+    .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
 }
 
-/** Projeleri döndürür (GitHub istatistikleri derleme anında zenginleştirilir). */
+/** Canlı proje listesi (son itilen ilk). */
 export async function getProjects(): Promise<Project[]> {
-  let gh: Record<string, GhRepo> = {};
   try {
-    gh = await fetchGithub();
+    return await fetchGithub();
   } catch {
-    gh = {}; // çevrimdışı / limit: sabit listeyle devam
+    return FALLBACK;
   }
-
-  return curated.map((p) => {
-    const g = p.repo ? gh[p.repo] : undefined;
-    if (!g) return p;
-    return {
-      ...p,
-      url: p.url ?? g.html_url ?? null,
-      stars: g.stargazers_count ?? p.stars,
-      pushedAt: g.pushed_at ?? p.pushedAt,
-      lang: p.lang || g.language || '',
-    };
-  });
 }
 
-/** Öne çıkan + ilk N (ana sayfa için). */
+/** Ana sayfa vitrini: öne çıkan + en yeniler. */
 export async function getFeaturedProjects(limit = 4): Promise<Project[]> {
   const all = await getProjects();
   const feat = all.filter((p) => p.featured);

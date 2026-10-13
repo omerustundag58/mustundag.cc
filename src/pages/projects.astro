@@ -6,6 +6,8 @@ import ProjectCard from '../components/ProjectCard.astro';
 import { getProjects } from '../data/projects';
 
 const projects = await getProjects();
+// öne çıkanlar başa, aynı grup içinde GitHub'daki güncellik sırası korunur
+projects.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
 const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivleyiciler ve daha fazlası.';
 ---
 
@@ -13,7 +15,7 @@ const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivl
   <Terminal title="omer@mustundag: ~/projects — ls -la">
     <Prompt cmd="ls -la ~/projects" delay={0.1}>
       <p class="out" style="margin-bottom: 0">
-        <span class="dim">toplam {projects.length} kayıt · yıldızlar GitHub'dan derleme anında çekilir</span>
+        <span class="dim">toplam {projects.length} depo · GitHub'dan canlı çekildi</span>
       </p>
     </Prompt>
 
@@ -23,7 +25,7 @@ const desc = 'Açık kaynak ve kişisel projeler: DPI VPN, MCP sunucusu, arşivl
 
     <p class="notice" style="margin-top: 22px">
       Listede olmayan şeyler de var: masaüstümde duran deneyler, yarım kalan
-      depolar ve bir gün çıkar dediğim araçlar. Kodun tamamı
+      depolar ve bir gün çıkar dediğim araçlar. Kodun tamamı{' '}
       <a href="https://github.com/omerustundag58">GitHub</a>'da.
     </p>
   </Terminal>

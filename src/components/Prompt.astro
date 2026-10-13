@@ -22,7 +22,7 @@ const style = `--len:${len}ch;--dur:${dur}s;--delay:${delay}s;animation-timing-f
   <span class="cmd"><span class="tw" style={style}>{cmd}</span></span><span class="cursor-blink" aria-hidden="true">▌</span>
 </div>
 {
-  Astro.slots.has('output') && (
+  Astro.slots.has('default') && (
     <div class="out">
       <slot />
     </div>

@@ -1,4 +1,4 @@
-/** Tarihleri sabit ve Türkçe biçimde yazar (RSS ve sayfalar aynı formatı kullanır). */
+/** Tarihleri sabit ve Türkçe biçimde yazar (tüm sayfalar aynı formatı kullanır). */
 const AYLAR = [
   'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
   'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
